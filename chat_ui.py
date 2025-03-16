@@ -1,13 +1,23 @@
 import streamlit as st
-import random
-import time
+import torch
 from rag import FinancialChatbot
+import warnings
+from transformers import logging
 
-chatbot = FinancialChatbot(data_path="Nestle_Financtial_report_till2023.xlsx")
+# Suppress warnings
+warnings.filterwarnings("ignore")
+logging.set_verbosity_error()
+
+torch.classes.__path__ = []
+
+# Use session state to persist the chatbot instance
+if "chatbot" not in st.session_state:
+    st.session_state.chatbot = FinancialChatbot(data_path="Nestle_Financtial_report_till2023.xlsx")
 
 def fetch_answer_from_backend(query):
     """Calls the backend function to get an answer."""
-    return chatbot.get_answer(query)  # Returns the answer and confidence
+    return st.session_state.chatbot.get_answer(query)  # Use session state chatbot instance
+
 
 
 # Initialize Session State for Chat History
@@ -59,14 +69,12 @@ st.title("Financial RAG Chat Assistant")
 
 # Display Chat History
 for chat in st.session_state.chat_history:
-    # st.markdown(f"**You:** {chat['question']}")
-    # st.markdown(f"**Assistant:** {chat['answer']}")
     # User's query on the right
     st.markdown(
         f"""
         <div style='text-align: right; max-width: 75%; float: right; clear: both;'>
-            <div style='font-size: 13px; color: #b2aca2; margin: 0 10px;'>You</div>
-            <div style='background-color: #32500a; padding: 10px; border-radius: 10px; 
+            <div style='font-size: 13px; color: #4a4a4a; margin: 0 10px;'>You</div>
+            <div style='background-color: #d3d3d3; color: black; padding: 10px; border-radius: 10px; 
                         box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);'>
                 {chat['question']}
             </div>
@@ -80,8 +88,8 @@ for chat in st.session_state.chat_history:
         st.markdown(
             f"""
             <div style='text-align: left; max-width: 75%; float: left; clear: both;'>
-                <div style='font-size: 13px; color: #b2aca2; margin: 0 10px;'>Assistant</div>
-                <div style='background-color: #26292b; padding: 10px; border-radius: 10px; 
+                <div style='font-size: 13px; color: #4a4a4a; margin: 0 10px;'>Assistant</div>
+                <div style='background-color: #add8e6; color: black; padding: 10px; border-radius: 10px; 
                         box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);'>
                     {chat['answer']}
                 </div>
@@ -93,7 +101,7 @@ for chat in st.session_state.chat_history:
     # Confidence Score (Below the answer)
     if chat["confidence"] is not None:
         st.markdown(
-            f"<div style='clear: both; color: #b2aca2; font-size: 13px;'>Confidence: {chat['confidence'] * 100}%</div>",
+            f"<div style='clear: both; color: #4a4a4a; font-size: 13px;'>Confidence: {chat['confidence'] * 100}%</div>",
             unsafe_allow_html=True
         )
         st.divider()  # Adds a visual divider between Q&A pairs
